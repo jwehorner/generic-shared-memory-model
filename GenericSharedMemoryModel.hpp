@@ -61,7 +61,7 @@ public:
      * @brief Function write_data() is used to write a new value of the T into the shared memory segement.
      * @param  new_data T structure to be written into the shared memory segement.
      */
-	void write_data(const T new_data) const {memcpy(data, &new_data, sizeof(T))}
+	void write_data(const T new_data) const {memcpy(data, &new_data, sizeof(T));}
 
     ///Public member for the structure that is mapped to the shared memory segement upon the calling of connect().
     T* data;
