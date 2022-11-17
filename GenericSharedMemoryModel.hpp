@@ -48,14 +48,14 @@ public:
      * @brief Function is_connected() is used to check if the shared memory is connected.
      * @returns Boolean true when the shared memory is connected, false otherwise.
      */
-    bool is_connected() const {return m_is_connected};
+    bool is_connected() const {return m_is_connected;};
 
     /**
      * @brief Function get_data() is used to get a read only snapshot of the shared memory segement.
      * @returns T structure that is a snapshot of the shared memory segement at the time of the function call.
      * @note While data is public, it would be best to use get_data() if read only access is needed to shared memory.
      */
-    T get_data() const {return *data};
+    T get_data() const {return *data;};
 
     ///Public member for the structure that is mapped to the shared memory segement upon the calling of connect().
     T* data;
