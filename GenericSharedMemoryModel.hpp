@@ -27,7 +27,7 @@ template<typename T>
 class GenericSharedMemoryModel {
 public:
     ///Constructor for the GenericSharedMemoryModel class that initialises members, but does not connect shared memory.
-    GenericSharedMemoryModel(std::string name) : name(name) {m_is_connected = false;};
+    GenericSharedMemoryModel(const std::string name) : name(name) {m_is_connected = false;};
 	
     ///Destructor for the GenericSharedMemoryModel class that disconnects from shared memory if the object is deleted.
     ~GenericSharedMemoryModel() {disconnect();};
@@ -56,6 +56,12 @@ public:
      * @note While data is public, it would be best to use get_data() if read only access is needed to shared memory.
      */
     T get_data() const {return *data;};
+
+    /**
+     * @brief Function write_data() is used to write a new value of the T into the shared memory segement.
+     * @param  new_data T structure to be written into the shared memory segement.
+     */
+	void write_data(const T new_data) const {memcpy(data, &new_data, sizeof(T))}
 
     ///Public member for the structure that is mapped to the shared memory segement upon the calling of connect().
     T* data;
