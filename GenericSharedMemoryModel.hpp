@@ -1,5 +1,17 @@
-#ifndef SHAREDMEMORYMODEL_H
-#define SHAREDMEMORYMODEL_H
+/**
+ * 	@file		GenericSharedMemoryModel.hpp
+ *	@brief		Definition of the GenericSharedMemoryModel class.
+ *	@details	This header file defines the GenericSharedMemoryModel class for use in connecting 
+				to a shared memory segment of arbitrary type and name. The class can be used by 
+				instantiating an object with the type of the shared memory segment and its name, 
+				then mapping the segment using the connect() method. The segment can then be 
+				written to or read from using methods or by accessing the structure directly 
+				through the data member.
+ *	@author		James Horner
+ */
+
+#ifndef GENERIC_SHARED_MEMORY_MODEL_H
+#define GENERIC_SHARED_MEMORY_MODEL_H
 
 #include <string>
 
@@ -13,12 +25,11 @@
 #include <sys/mman.h>   //For POSIX shared memory via shm_open
 #endif
 
-//Object Oriented model of shared memory which provides methods for connecting/disconnecting as well as state variables.
 /**
  * @brief 	Class GenericSharedMemoryModel is used for management of a connection to a shared memory segment of any type.
  * @details Class GenericSharedMemoryModel provides an easy to use interface with a generic shared memory segment that can be used 
  * 			in any C++ application. The class has functions for connecting to and disconnecting from shared memory along with a function for 
- * 			taking a snapshot of the shared memory segement at any given time. Because the structure that is mapped to shared memory is 
+ * 			taking a snapshot of the shared memory segment at any given time. Because the structure that is mapped to shared memory is 
  * 			also public, it can be interacted with directly by the user and therefore can be used to set values in shared memory, unlike 
  * 			the struct returned be get_data().
  * @param 	T datatype of the shared memory segment to connect to.
@@ -34,13 +45,13 @@ public:
 
     /**
      * @brief Function connect() is used to connect the GenericSharedMemoryModel object to the shared memory segment.
-     * @returns Boolean true when the shared memory segement was successfully connected, false otherwise.
+     * @returns Boolean true when the shared memory segment was successfully connected, false otherwise.
      */
     bool connect();
 
     /**
      * @brief Function disconnect() is used to disconnect the GenericSharedMemoryModel object from the shared memory segment.
-     * @returns Boolean true when the shared memory segement was successfully disconnected, false otherwise.
+     * @returns Boolean true when the shared memory segment was successfully disconnected, false otherwise.
      */
     bool disconnect();
 
@@ -51,26 +62,26 @@ public:
     bool is_connected() const {return m_is_connected;};
 
     /**
-     * @brief Function get_data() is used to get a read only snapshot of the shared memory segement.
-     * @returns T structure that is a snapshot of the shared memory segement at the time of the function call.
+     * @brief Function get_data() is used to get a read only snapshot of the shared memory segment.
+     * @returns T structure that is a snapshot of the shared memory segment at the time of the function call.
      * @note While data is public, it would be best to use get_data() if read only access is needed to shared memory.
      */
     T get_data() const {return *data;};
 
     /**
-     * @brief Function write_data() is used to write a new value of the T into the shared memory segement.
-     * @param  new_data T structure to be written into the shared memory segement.
+     * @brief Function write_data() is used to write a new value of the T into the shared memory segment.
+     * @param  new_data T structure to be written into the shared memory segment.
      */
 	void write_data(const T new_data) const {memcpy(data, &new_data, sizeof(T));}
 
-    ///Public member for the structure that is mapped to the shared memory segement upon the calling of connect().
+    ///Public member for the structure that is mapped to the shared memory segment upon the calling of connect().
     T* data;
 
 private:
     ///Private member for the status of the connection to shared memory.
     bool m_is_connected;
     /**
-     * @brief Name of the shared memory segement.
+     * @brief Name of the shared memory segment.
      */
     std::string name;
 
@@ -128,7 +139,7 @@ bool GenericSharedMemoryModel<T>::connect()
         //Set the connection state to true.
         m_is_connected = true;
 #else
-        //Get an ID for the shared memory segement with the name.
+        //Get an ID for the shared memory segment with the name.
         hMapFile = shm_open(sharedMemName, O_CREAT | O_RDWR, 0666); //Create file descriptor for shared mem. Create the mem if it doesn't already exist. Set permissions to 666
 
         //If the ID is invalid,
@@ -140,7 +151,7 @@ bool GenericSharedMemoryModel<T>::connect()
             return false;
         }
 
-        //Try to map the shared memory segement to a T structure.
+        //Try to map the shared memory segment to a T structure.
         ftruncate(hMapFile, sizeof (T));
         data = (T *) mmap(NULL, sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, hMapFile, 0);
 
@@ -179,4 +190,4 @@ bool GenericSharedMemoryModel<T>::disconnect()
     return true;
 }
 
-#endif // SHAREDMEMORYMODEL_H
+#endif /* GENERIC_SHARED_MEMORY_MODEL_H */
