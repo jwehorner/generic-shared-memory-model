@@ -101,8 +101,11 @@ bool GenericSharedMemoryModel<T>::connect()
     //If shared memory is not connected already,
     if(!m_is_connected) {
 #ifdef _WIN32
-        //Store the value of the handle returned by CreateFileMapping so it can be error-checked.
-        hMapFile = CreateFileMapping(                               
+        //Store the value of the handle returned by CreateFileMappingA so it can be error-checked.
+		// 2023-02-14 JH:	Force use of CreateFileMappingA as on some platforms CreateFileMapping 
+		//					expands to CreateFileMappingW requiring a wide string which a std::string
+		// 					is not always compatible with without conversion.
+        hMapFile = CreateFileMappingA(                               
 			INVALID_HANDLE_VALUE,		// Create new file mapping object.
 			NULL,	                    // default security
 			PAGE_READWRITE,		        // read/write access
