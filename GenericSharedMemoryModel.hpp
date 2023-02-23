@@ -13,6 +13,7 @@
 #ifndef GENERIC_SHARED_MEMORY_MODEL_H
 #define GENERIC_SHARED_MEMORY_MODEL_H
 
+#include <mutex>
 #include <string>
 
 #ifdef _WIN32
@@ -38,7 +39,7 @@ template<typename T>
 class GenericSharedMemoryModel {
 public:
     ///Constructor for the GenericSharedMemoryModel class that initialises members, but does not connect shared memory.
-    GenericSharedMemoryModel(const std::string name) : name(name) {m_is_connected = false;};
+    GenericSharedMemoryModel(const std::string name) : m_name(name) {m_is_connected = false;};
 	
     ///Destructor for the GenericSharedMemoryModel class that disconnects from shared memory if the object is deleted.
     ~GenericSharedMemoryModel() {disconnect();};
@@ -59,20 +60,32 @@ public:
      * @brief Function is_connected() is used to check if the shared memory is connected.
      * @returns Boolean true when the shared memory is connected, false otherwise.
      */
-    bool is_connected() const {return m_is_connected;};
+    bool is_connected() {
+		// Gain access to the member mutex.
+		std::scoped_lock<std::mutex> member_guard(m_member_lock);
+		return m_is_connected;
+	};
 
     /**
      * @brief Function get_data() is used to get a read only snapshot of the shared memory segment.
      * @returns T structure that is a snapshot of the shared memory segment at the time of the function call.
      * @note While data is public, it would be best to use get_data() if read only access is needed to shared memory.
      */
-    T get_data() const {return *data;};
+    T get_data() {
+		// Gain access to the member mutex.
+		std::scoped_lock<std::mutex> member_guard(m_member_lock);
+		return *data;
+	};
 
     /**
      * @brief Function write_data() is used to write a new value of the T into the shared memory segment.
      * @param  new_data T structure to be written into the shared memory segment.
      */
-	void write_data(const T new_data) const {memcpy(data, &new_data, sizeof(T));}
+	void write_data(const T new_data) {
+		// Gain access to the member mutex.
+		std::scoped_lock<std::mutex> member_guard(m_member_lock);
+		memcpy(data, &new_data, sizeof(T));
+	}
 
     ///Public member for the structure that is mapped to the shared memory segment upon the calling of connect().
     T* data;
@@ -83,7 +96,9 @@ private:
     /**
      * @brief Name of the shared memory segment.
      */
-    std::string name;
+    std::string m_name;
+	/// Mutex lock to protect the members of the class when accessing concurrently.
+	std::mutex m_member_lock;
 
 #ifdef WIN32
     ///Handle to file mapping object for the connection to shared memory in Windows.
@@ -98,6 +113,9 @@ private:
 template<typename T>
 bool GenericSharedMemoryModel<T>::connect()
 {
+	// Gain access to the member mutex.
+	std::scoped_lock<std::mutex> member_guard(m_member_lock);
+
     //If shared memory is not connected already,
     if(!m_is_connected) {
 #ifdef _WIN32
@@ -111,12 +129,12 @@ bool GenericSharedMemoryModel<T>::connect()
 			PAGE_READWRITE,		        // read/write access
 			0,						    // maximum object size (high-order DWORD)
 			sizeof(T),		// maximum object size (low-order DWORD)
-			name.c_str());				// name of mapping object 
+			m_name.c_str());				// name of mapping object 
         
         //If the handle is invalid,
         if (hMapFile == NULL){
             //Print an error message and return failure.
-            printf("Couldn't connect to shared memory with name: %s\n", name.c_str());
+            printf("Couldn't connect to shared memory with name: %s\n", m_name.c_str());
             m_is_connected = false;
             return false;
         }
@@ -133,7 +151,7 @@ bool GenericSharedMemoryModel<T>::connect()
         //If the mapping returned an invalid memory location,
         if (data == NULL){
             //Print an error message, close the file handle, and return failure.
-            printf("Couldn't map view of file to shared memory with name: %s\n", name.c_str());
+            printf("Couldn't map view of file to shared memory with name: %s\n", m_name.c_str());
             CloseHandle(hMapFile);
             m_is_connected = false;
             return false;
@@ -178,6 +196,9 @@ bool GenericSharedMemoryModel<T>::connect()
 template<typename T>
 bool GenericSharedMemoryModel<T>::disconnect()
 {
+	// Gain access to the member mutex.
+	std::scoped_lock<std::mutex> member_guard(m_member_lock);
+
     //If shared memory is connected currently,
     if(m_is_connected){
 #ifdef _WIN32
