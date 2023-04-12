@@ -13,9 +13,12 @@
 #ifndef GENERIC_SHARED_MEMORY_MODEL_H
 #define GENERIC_SHARED_MEMORY_MODEL_H
 
+// System Libraries
+#include <cstring>
 #include <mutex>
 #include <string>
 
+// Platform Dependant System Libraries
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
