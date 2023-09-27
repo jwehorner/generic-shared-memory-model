@@ -161,13 +161,13 @@ bool GenericSharedMemoryModel<T>::connect()
         m_is_connected = true;
 #else
         //Get an ID for the shared memory segment with the name.
-        hMapFile = shm_open(sharedMemName, O_CREAT | O_RDWR, 0666); //Create file descriptor for shared mem. Create the mem if it doesn't already exist. Set permissions to 666
+        hMapFile = shm_open(m_name.c_str(), O_CREAT | O_RDWR, 0666); //Create file descriptor for shared mem. Create the mem if it doesn't already exist. Set permissions to 666
 
         //If the ID is invalid,
         if (hMapFile < 0) {
             //Could not create the shared memory file descriptor via shm_open()
             //Print an error message and return failure.
-            printf("Couldn't connect to shared memory with name: %s\n", name.c_str());
+            printf("Couldn't connect to shared memory with name: %s\n", m_name.c_str());
 			m_is_connected = false;
             return false;
         }
@@ -179,7 +179,7 @@ bool GenericSharedMemoryModel<T>::connect()
         //If the mapping is unsuccessful,
         if (data == MAP_FAILED) {
             //Print an error message, close the file handle, and return failure.
-            printf("Couldn't map view of file to shared memory with name: %s\n", name.c_str());
+            printf("Couldn't map view of file to shared memory with name: %s\n", m_name.c_str());
             m_is_connected = false;
             return false;
         }
