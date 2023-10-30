@@ -10,8 +10,10 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+if (UNIX AND NOT APPLE)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+	set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+endif()
 
 add_executable(test_generic_shared_memory_model					"${CMAKE_SOURCE_DIR}/test/test_generic_shared_memory_model.cpp")
 

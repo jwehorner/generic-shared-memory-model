@@ -27,6 +27,7 @@
 #include <fcntl.h>      // Needed for read/write definitions
 #include <unistd.h>     // Needed for close()
 #include <sys/mman.h>   // For POSIX shared memory via shm_open
+#include <sys/stat.h>
 #endif
 
 /**
@@ -189,15 +190,19 @@ bool GenericSharedMemoryModel<T>::connect()
             return false;
         }
 
-        // Try to truncate the file mapping handle to the correct size.
-        if (ftruncate(m_file_mapping_handle, sizeof (T)) != 0) {
-            // Could not truncate shared memory to the correct size.
-            if (m_log_warnings) {
-                // Print an error message and return failure.
-                printf("Couldn't truncate shared memory because of error: %d\n", errno);
+        // Check if this is the first time the segment is being opened, and if so try to truncate it.
+        struct stat mapping_stat;
+        if (fstat(m_file_mapping_handle, &mapping_stat) && mapping_stat.st_size == 0) {
+            // Try to truncate the file mapping handle to the correct size.
+            if (ftruncate(m_file_mapping_handle, sizeof (T)) != 0) {
+                // Could not truncate shared memory to the correct size.
+                if (m_log_warnings) {
+                    // Print an error message and return failure.
+                    printf("Couldn't truncate shared memory because of error: %d\n", errno);
+                }
+                m_is_connected = false;
+                return false;
             }
-			m_is_connected = false;
-            return false;
         }
 
         // Try to map the shared memory segment to a T structure.
