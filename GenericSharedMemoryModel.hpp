@@ -192,7 +192,7 @@ bool GenericSharedMemoryModel<T>::connect()
 
         // Check if this is the first time the segment is being opened, and if so try to truncate it.
         struct stat mapping_stat;
-        if (fstat(m_file_mapping_handle, &mapping_stat) && mapping_stat.st_size == 0) {
+        if (fstat(m_file_mapping_handle, &mapping_stat) != -1 && mapping_stat.st_size == 0) {
             // Try to truncate the file mapping handle to the correct size.
             if (ftruncate(m_file_mapping_handle, sizeof (T)) != 0) {
                 // Could not truncate shared memory to the correct size.
